@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professor Cheeseball's Escape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+   1. CONFIG-FRIENDLY VARIABLES
+   Swap colors/fonts here without touching layout code below.
+   ============================================================ */
+        :root {
+            --white: #ffffff;
+            --ink: #1a1a1a;
+            --panel: rgba(20, 20, 20, 0.88);
+            --accent: #ff5c8a;
+            /* placeholder PPG-pink accent, change freely */
+            --line-thick: 10px;
+            --transition-fast: 0.25s;
+            --transition-fade: 0.4s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Trebuchet MS', 'Verdana', sans-serif;
+            background: #000;
+        }
+
+        /* ============================================================
+   2. SCREEN SYSTEM
+   Every "page" (main, robot, lock, cabinet, treasure, win) is a
+   .screen div. Only the one with .active is visible. Switching
+   screens always goes through the white fade overlay.
+   ============================================================ */
+        .screen {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            background: #111;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        #fade-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--white);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-fade) ease;
+            z-index: 9999;
+        }
+
+        #fade-overlay.show {
+            opacity: 1;
+        }
+
+        /* ============================================================
+   3. MAIN SCREEN — background art + 4 hotspots
+   ============================================================ */
+        #screen-main {
+            padding: 0;
+        }
+
+        .scene-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scene-bg {
+            position: absolute;
+            inset: 0;
+            background: url('assets/scene-bg.png') center / cover no-repeat;
+            transition: filter var(--transition-fast) ease;
+        }
+
+        .scene-bg.blurred {
+            filter: blur(10px) brightness(0.6);
+        }
+
+        .scene-bg.blurred~.hotspot,
+        .scene-bg.blurred~.scene-shadow,
+        .scene-bg.blurred~.scene-light {
+            filter: blur(10px) brightness(0.6);
+            pointer-events: none;
+        }
+
+        /* Hotspots are positioned by percentage so they line up with your art.
+   Adjust top/left per item to match where things sit on YOUR background. */
+        .hotspot {
+            position: absolute;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transform: translate(-50%, -50%);
+        }
+
+        .hotspot img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        .hotspot:hover img,
+        .hotspot:hover svg {
+            filter:
+                drop-shadow(4px 0 0 white) drop-shadow(-4px 0 0 white) drop-shadow(0 2px 0 white) drop-shadow(0 -2px 0 white);
+            transform: scale(1.06);
+        }
+
+        .hotspot.solved {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .hotspot.solved::after {
+            content: "✓";
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #2ecc71;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .hotspot.locked-msg {
+            cursor: not-allowed;
+        }
+
+        /* ============================================================
+   4. DETAIL OVERLAY — appears when you click a hotspot on main
+   ============================================================ */
+        .scene-shadow,
+        .scene-light {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            pointer-events: none;
+            z-index: 40;
+
+
+        }
+
+        .scene-shadow {
+            background-image: url('assets/scene-shadow.png');
+            opacity: 0.2;
+        }
+
+        .scene-light {
+            background-image: url('assets/scene-light.png');
+            z-index: 41;
+            opacity: 0.2;
+        }
+
+        /* ============================================================
+   4b. DETAIL OVERLAY — the pink pop-up banner shown on hotspot click
+   ============================================================ */
+        .detail-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 0 16px;
+        }
+
+        .detail-overlay.show {
+            display: flex;
+        }
+
+        .detail-line {
+            position: relative;
+            width: 100%;
+            max-width: none;
+            background:
+                repeating-linear-gradient(-6deg,
+                    rgba(255, 255, 255, 0.35) 0 2px,
+                    transparent 2px 22px),
+                linear-gradient(100deg, #f9b8d0 0%, #f6a6c4 45%, #f2c9dd 100%);
+            border: 6px solid #7a3b63;
+            box-shadow: 8px 8px 0 rgba(122, 59, 99, 0.35);
+            padding: 30px 32px;
+            display: flex;
+            align-items: center;
+            gap: 26px;
+            transform: rotate(-1.2deg);
+            animation: bannerBounce 0.55s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes bannerBounce {
+            0% {
+                transform: rotate(-1.2deg) scale(0.2);
+                opacity: 0;
+            }
+
+            55% {
+                transform: rotate(-1.2deg) scale(1.08);
+                opacity: 1;
+            }
+
+            75% {
+                transform: rotate(-1.2deg) scale(0.94);
+            }
+
+            100% {
+                transform: rotate(-1.2deg) scale(1);
+            }
+        }
+
+        .detail-art {
+            width: 400px;
+            height: 400px;
+            flex: 0 0 auto;
+            image-rendering: pixelated;
+            filter: drop-shadow(3px 3px 0 rgba(122, 59, 99, 0.4));
+        }
+
+        .detail-art svg,
+        .detail-art img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .detail-text {
+            flex: 1;
+        }
+
+        .detail-text h2 {
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 16px;
+            letter-spacing: 1px;
+            color: #7a3b63;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .detail-text p {
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: 20px;
+            line-height: 1.4;
+            color: #6b3556;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            font-family: 'Press Start 2P', inherit;
+            background: var(--accent);
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: transform 0.15s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+
+        /* Light pink pixel Start button used in the hotspot banner */
+        .btn.start-btn {
+            background: #ffd7e8;
+            color: #7a3b63;
+            border: 3px solid #7a3b63;
+            border-radius: 0;
+            font-size: 11px;
+            padding: 12px 24px;
+            box-shadow: 4px 4px 0 rgba(122, 59, 99, 0.5);
+        }
+
+        .btn.start-btn:hover {
+            background: #ffe4f0;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 rgba(122, 59, 99, 0.5);
+        }
+
+        .btn.start-btn:active {
+            transform: translate(1px, 1px);
+            box-shadow: 2px 2px 0 rgba(122, 59, 99, 0.5);
+        }
+
+        .detail-close {
+            position: absolute;
+            top: -14px;
+            right: -14px;
+            width: 30px;
+            height: 30px;
+            background: #7a3b63;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ============================================================
+   5. SHARED ROOM LAYOUT
+   ============================================================ */
+        .room {
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            padding: 40px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .room h2 {
+            font-size: 26px;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .room .prompt {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 24px;
+            max-width: 520px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+
+        .feedback {
+            min-height: 22px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .feedback.bad {
+            color: #ff6b6b;
+        }
+
+        .feedback.good {
+            color: #2ecc71;
+        }
+
+        .shake {
+            animation: shake 0.35s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-8px);
+            }
+
+            75% {
+                transform: translateX(8px);
+            }
+        }
+
+        input[type="text"] {
+            font-family: inherit;
+            font-size: 16px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            border: 2px solid var(--white);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--white);
+            text-align: center;
+            width: 260px;
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ============================================================
+   6. ROBOT ROOM — pixel "OS window" chrome
+   ============================================================ */
+        #screen-robot {
+            background: url('assets/robotfinalpage.png') center / cover no-repeat;
+        }
+
+        #screen-robot .room {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 24px;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.35));
+        }
+
+        .pixel-window {
+            width: min(94%, 760px);
+            background: #ffe6f2;
+            border: 4px solid #7a3b63;
+            box-shadow: 8px 8px 0 rgba(122, 59, 99, 0.35);
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+        }
+
+        .pixel-titlebar {
+            background: linear-gradient(90deg, #f0a8cc, #d97fb0);
+            border-bottom: 4px solid #7a3b63;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #5c2a49;
+        }
+
+        .pixel-titlebar .pixel-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pixel-titlebar .pixel-dots span {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid #7a3b63;
+            display: inline-block;
+        }
+
+        .pixel-menubar {
+            background: #f7c9df;
+            border-bottom: 4px solid #7a3b63;
+            padding: 8px 16px;
+            display: flex;
+            gap: 22px;
+            font-size: 11px;
+            color: #7a3b63;
+        }
+
+        .pixel-content {
+            padding: 34px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+
+        .pixel-content h2,
+        .pixel-content .prompt {
+            text-align: center;
+        }
+
+        #robot-art {
+            width: 160px;
+            height: 160px;
+            margin-bottom: 0;
+            image-rendering: pixelated;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .pixel-dialog {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pixel-dialog h2 {
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 15px;
+            color: #7a3b63;
+        }
+
+        .pixel-dialog .prompt {
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: 20px;
+            color: #6b3556;
+            opacity: 1;
+            max-width: 340px;
+        }
+
+        .pixel-window input[type="text"] {
+            border: 3px solid #7a3b63;
+            background: #fff;
+            color: #5c2a49;
+        }
+
+        .pixel-window input[type="text"]::placeholder {
+            color: rgba(92, 42, 73, 0.45);
+        }
+
+        .pixel-window .btn {
+            background: #7a3b63;
+            color: #ffe6f2;
+            border-radius: 0;
+            font-size: 11px;
+            box-shadow: 3px 3px 0 rgba(122, 59, 99, 0.35);
+        }
+
+        .pixel-window .btn:hover {
+            background: #93507d;
+        }
+
+        /* Success message rendered as a speech bubble pointing back at the robot */
+        #robotFeedback.good {
+            position: relative;
+            background: #fff;
+            border: 3px solid #e85a97;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-left: 20px;
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: 18px;
+            line-height: 1.4;
+            color: #c8477f;
+            max-width: 300px;
+            text-align: left;
+        }
+
+        #robotFeedback.good::before {
+            content: "";
+            position: absolute;
+            left: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 9px solid transparent;
+            border-right-color: #e85a97;
+        }
+
+        #robotFeedback.bad {
+            color: #ff6b6b;
+        }
+
+        /* Pink pixel Back button, scoped to the robot room */
+        #screen-robot .back-btn.pink-back {
+            background: #ffb8d9;
+            color: #7a3b63;
+            border: 3px solid #7a3b63;
+            border-radius: 0;
+            padding: 8px 16px;
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 10px;
+            box-shadow: 3px 3px 0 rgba(122, 59, 99, 0.4);
+            opacity: 1;
+        }
+
+        #screen-robot .back-btn.pink-back:hover {
+            background: #ffc9e2;
+            transform: translate(-2px, -2px);
+            box-shadow: 5px 5px 0 rgba(122, 59, 99, 0.4);
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        /* ============================================================
+   7. LOCK ROOM
+   ============================================================ */
+        .timer {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+
+        .timer.warn {
+            color: #ff6b6b;
+        }
+
+        .cipher-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            padding: 14px 20px;
+            font-size: 20px;
+            letter-spacing: 3px;
+            margin: 18px 0;
+        }
+
+        /* 2-frame lock animation: swap this class to swap the art frame */
+        #lock-art {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 10px;
+            transition: transform 0.15s ease;
+        }
+
+        #lock-art.open {
+            transform: rotate(12deg);
+        }
+
+        /* ============================================================
+   8. FILE CABINET ROOM (image-based scene)
+   ============================================================ */
+        .cabinet-scene-wrap {
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 3 / 4;
+            margin: 16px auto;
+            /* REPLACE with your close-up cabinet art: */
+            background: linear-gradient(180deg, #3d3120, #241c14);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .cabinet-scene-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: filter var(--transition-fast) ease;
+        }
+
+        .cabinet-scene-wrap.blurred .cabinet-scene-bg {
+            filter: blur(8px) brightness(0.6);
+        }
+
+        /* One invisible/outlined hotspot per drawer, positioned by % to match your art */
+        .cabinet-hotspot {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color var(--transition-fast) ease, background var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+        }
+
+        .cabinet-hotspot:hover {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
+        }
+
+        .cabinet-hotspot.solved-drawer {
+            border-color: #2ecc71;
+            background: rgba(46, 204, 113, 0.12);
+        }
+
+        /* Detail panel that opens when a drawer is clicked -- same blur + thick-line
+   language as the main screen's item panel, for visual consistency */
+        .cabinet-detail-overlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .cabinet-detail-overlay.show {
+            display: flex;
+        }
+
+        #cabinetDrawerTitle {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .cabinet-file-row {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .cabinet-file-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .cabinet-file-row.selected {
+            background: var(--accent);
+            color: #1a1a1a;
+        }
+
+        /* ============================================================
+   9. TREASURE ROOM
+   ============================================================ */
+        #treasure-art {
+            width: 160px;
+            height: 160px;
+            margin-bottom: 16px;
+            transition: transform 0.15s ease;
+        }
+
+        #treasure-art.open {
+            transform: scale(1.08) rotate(-3deg);
+        }
+
+        /* ============================================================
+   10. WIN SCREEN
+   ============================================================ */
+        #screen-win {
+            background: var(--white);
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        #screen-win h1 {
+            font-size: 34px;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        #screen-win p {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        @media (max-width:600px) {
+            .detail-line {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cabinet {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="fade-overlay"></div>
+
+    <!-- =========================================================
+     MAIN SCREEN
+     ========================================================= -->
+    <div id="screen-main" class="screen active">
+        <div class="scene-wrap">
+            <div class="scene-bg" id="sceneBg"></div>
+
+            <!-- Position each hotspot (top/left as %) to match YOUR background art -->
+            <button class="hotspot" id="hotspot-robot" style="top:70.8%; left:35%; width:30%; height:40.1%;">
+                <img src="assets/hotspot-robot.png" alt="">
+            </button>
+
+            <button class="hotspot" id="hotspot-lock" style="top:36.1%; left:57.1%; width:20%; height:20%;">
+                <img src="assets/hotspot-lock.png" alt="">
+            </button>
+
+            <button class="hotspot" id="hotspot-cabinet" style="top:65.3%; left:96.1%; width:40%; height:60%;">
+                <img src="assets/hotspot-cabinet.png" alt="">
+            </button>
+
+            <button class="hotspot" id="hotspot-treasure" style="top:80.1%; left:73.4%; width:40%; height:40%;">
+                <img src="assets/hotspot-chest.png" alt="">
+            </button>
+
+            <!-- Ambient lighting layers — sit above the scene art but never block hotspot clicks -->
+            <div class="scene-shadow"></div>
+            <div class="scene-light"></div>
+
+            <!-- Detail overlay (blur + description + Start) -->
+            <div class="detail-overlay" id="detailOverlay">
+                <div class="detail-line">
+                    <button class="detail-close" id="detailClose">✕</button>
+                    <div class="detail-art" id="detailArt"></div>
+                    <div class="detail-text">
+                        <h2 id="detailTitle"></h2>
+                        <p id="detailDesc"></p>
+                        <button class="btn start-btn" id="detailStart">Start</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+     ROBOT ROOM
+     ========================================================= -->
+        <div id="screen-robot" class="screen">
+            <div class="room" style="justify-content:flex-start; align-items:flex-start;">
+                <button class="back-btn pink-back" data-back>Go Back</button>
+            </div>
+        </div>
+
+        <!-- =========================================================
+     LOCK ROOM
+     ========================================================= -->
+        <div id="screen-lock" class="screen">
+            <div class="room">
+                <button class="back-btn" data-back>&larr; Back</button>
+                <svg id="lock-art" viewBox="0 0 100 100">
+                    <rect x="25" y="45" width="50" height="40" rx="6" fill="#ffd166" />
+                    <path d="M35 45 V30 a15 15 0 0 1 30 0 V45" stroke="#ffd166" stroke-width="8" fill="none" />
+                </svg>
+                <h2>The Lock</h2>
+                <div id="lockStep1">
+                    <p class="prompt">enter the unlock code Cheesepuff gave you !</p>
+                    <div class="field-row">
+                        <input type="text" id="lockCodeInput" placeholder="UNLOCK CODE" autocomplete="off">
+                        <button class="btn" id="lockCodeSubmit">Enter</button>
+                    </div>
+                </div>
+                <div id="lockStep2" style="display:none;">
+                    <div class="timer" id="lockTimer">1:30</div>
+                    <p class="prompt">Decrypt the whole message before time runs out, and type it out exactly.</p>
+                    <div class="cipher-box" id="cipherText"></div>
+                    <div class="field-row">
+                        <input type="text" id="lockInput" placeholder="TYPE THE DECRYPTED MESSAGE" autocomplete="off"
+                            style="width:360px;">
+                        <button class="btn" id="lockSubmit">Unlock</button>
+                    </div>
+                </div>
+                <div class="feedback" id="lockFeedback"></div>
+            </div>
+            <!-- Swap this src for your own licensed audio file -->
+            <audio id="lockAudio" src="assets/lock-theme.mp3" loop></audio>
+        </div>
+
+        <!-- =========================================================
+     FILE CABINET ROOM
+     ========================================================= -->
+        <div id="screen-cabinet" class="screen">
+            <div class="room">
+                <button class="back-btn" data-back>&larr; Back</button>
+                <h2>The File Cabinet</h2>
+                <div id="cabinetStep1">
+                    <p class="prompt" style="max-width:480px;">The cabinet is locked. Answer the question to unlock it.
+                    </p>
+                    <h2 style="font-size:20px;">Who needs to be more jolly and whimsical?</h2>
+                    <div class="field-row">
+                        <input type="text" id="cabinetAnswerInput" placeholder="YOUR ANSWER" autocomplete="off">
+                        <button class="btn" id="cabinetAnswerSubmit">Confirm</button>
+                    </div>
+                </div>
+                <div id="cabinetStep2" style="display:none;">
+                    <p class="prompt">Cabinet unlocked. Click a drawer to open it and look through its files.</p>
+                    <div class="cabinet-scene-wrap" id="cabinetSceneWrap">
+                        <div class="cabinet-scene-bg" id="cabinetSceneBg"></div>
+                        <!-- One hotspot per drawer. Position (top/left %) to match your close-up image
+             once you upload it -- these are placeholder positions for a 3-drawer cabinet. -->
+                        <button class="cabinet-hotspot" data-drawer="0"
+                            style="top:22%; left:50%; width:70%; height:22%;"></button>
+                        <button class="cabinet-hotspot" data-drawer="1"
+                            style="top:50%; left:50%; width:70%; height:22%;"></button>
+                        <button class="cabinet-hotspot" data-drawer="2"
+                            style="top:78%; left:50%; width:70%; height:22%;"></button>
+                    </div>
+
+                    <div class="cabinet-detail-overlay" id="cabinetDetailOverlay">
+                        <button class="detail-close" id="cabinetDetailClose">✕</button>
+                        <div class="detail-line" style="max-width:520px;">
+                            <div class="detail-text" style="flex:1;">
+                                <h2 id="cabinetDrawerTitle"></h2>
+                                <div id="cabinetFileList"></div>
+                                <button class="btn" id="cabinetFileSelectBtn">Select This File</button>
+                                <div class="feedback" id="cabinetDrawerFeedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feedback" id="cabinetFeedback"></div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+     TREASURE ROOM
+     ========================================================= -->
+        <div id="screen-treasure" class="screen">
+            <div class="room">
+                <button class="back-btn" data-back>&larr; Back</button>
+                <svg id="treasure-art" viewBox="0 0 100 100">
+                    <rect x="15" y="45" width="70" height="35" rx="4" fill="#c88a3a" />
+                    <path d="M15 45 a35 20 0 0 1 70 0 Z" fill="#e0a85a" />
+                </svg>
+                <h2>The Treasure Box</h2>
+                <p class="prompt">Enter the final code to open the box.</p>
+                <div class="field-row">
+                    <input type="text" id="treasureInput" placeholder="FINAL CODE" autocomplete="off">
+                    <button class="btn" id="treasureSubmit">Open</button>
+                </div>
+                <div class="feedback" id="treasureFeedback"></div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+     WIN SCREEN
+     ========================================================= -->
+        <div id="screen-win" class="screen">
+            <div>
+                <h1>Thank you for playing!</h1>
+                <p id="creditLine">Made by ____</p>
+            </div>
+        </div>
+
+        <script>
+/* ============================================================
+   CONFIG — everything you're likely to tune lives here
+   ============================================================ */
+/* THE CHAIN:
+   1. Physical robot (in the room) says the word "CHEESE" -> kids type
+      that into the digital robot below.
+   2. Solving the robot reveals an unlock code (4-digit or word) -->
+      kids need this to open Puzzle 2(the Lock).
+   3. In the Lock room, kids first enter that unlock code, THEN decrypt
+      a cipher that reads "CHEESEBALL NEEDS TO BE MORE JOLLY AND
+            WHIMSICAL." They only need to type the key word: CHEESEBALL.
+            4. Puzzle 3(the Cabinet) finds the tampered file, then directly
+      asks "Who needs to be more jolly and whimsical?" -- answer:
+            CHEESEBALL(known from step 3).
+   5. Solving Puzzle 3 reveals a code(4 - digit or word) -> typed into
+      the Treasure Chest to escape.
+*/
+            const ANSWERS = {
+                robot: "CHEESE",            // <-- physical robot says this word
+                puzzle2Unlock: "POWERPUFFS",      // shown after solving robot; needed to open Puzzle 2 (edit freely, digits or word)
+                lock: "CHEESEBALL NEEDS TO BE MORE JOLLY AND WHIMSICAL",  // full decrypted sentence, typed exactly
+                cabinet: "CHEESEBALL",      // answer to "who needs to be more jolly and whimsical?"
+                treasure: "KRISHNA"            // shown after solving Puzzle 3; needed to open the treasure chest (edit freely, digits or word)
+            };
+            // Ciphertext below is "CHEESEBALL NEEDS TO BE MORE JOLLY AND WHIMSICAL" shifted by 3
+            // (a classic Caesar cipher -- kids can decode it with a cipher wheel or by hand).
+            const LOCK_CIPHER_DISPLAY = "FKHHVHEDOO QHHGV WR EH PRUH MROOB DQG ZKLPVLFDO";
+            const LOCK_TIME_SECONDS = 90;          // 1:30, timer starts once they're past the unlock-code step
+            const CREDIT_NAME = "The Powerpuff Girls: Rama, Rody, & Sofia !!";            // put your name/team here
+            const GATE_TREASURE_UNTIL_OTHERS_SOLVED = true;
+
+            // Files for the cabinet puzzle — one per drawer, one is the answer.
+            const CABINET_DRAWERS = [
+                {
+                    label: "Drawer A",
+                    files: [
+                        { name: "cheeseball_bootlog.txt", date: "7/6/2026", size: "12 KB" },
+                        { name: "maze_photos.jpg", date: "7/6/2026", size: "340 KB" }
+                    ]
+                },
+                {
+                    label: "Drawer B",
+                    files: [
+                        { name: "jolly_mode.exe", date: "7/7/2026", size: "88 KB" },
+                        { name: "~$hidden_message.txt", date: "1/1/1970", size: "0 KB", isAnswer: true }
+                    ]
+                },
+                {
+                    label: "Drawer C",
+                    files: [
+                        { name: "robot_dance.mp4", date: "7/8/2026", size: "512 KB" },
+                        { name: "system_update.log", date: "7/8/2026", size: "9 KB" }
+                    ]
+                }
+            ];
+
+            /* ============================================================
+               STATE
+               ============================================================ */
+            const state = {
+                solved: { robot: false, lock: false, cabinet: false, treasure: false },
+                selectedFile: null,
+                lockTimeLeft: LOCK_TIME_SECONDS,
+                lockInterval: null
+            };
+
+            /* ============================================================
+               SCREEN TRANSITIONS
+               ============================================================ */
+            const fadeOverlay = document.getElementById('fade-overlay');
+
+            function goTo(screenId) {
+                fadeOverlay.classList.add('show');
+                setTimeout(() => {
+                    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                    document.getElementById(screenId).classList.add('active');
+                    requestAnimationFrame(() => {
+                        setTimeout(() => fadeOverlay.classList.remove('show'), 30);
+                    });
+                }, 400);
+            }
+
+            /* ============================================================
+               MAIN SCREEN — hotspots + detail overlay
+               ============================================================ */
+            /* ============================================================ */
+            const ITEM_INFO = {
+                robot: {
+                    title: "cheesepuff !!",
+                    desc: "drive the robot through the maze & discover the code !",
+                    room: "screen-robot",
+                    art: () => {
+                        const original = document.getElementById('hotspot-robot').querySelector('img');
+                        const clone = original.cloneNode(true);
+
+                        // Banner-only scaling and position shifts
+                        clone.style.width = '400px';
+                        clone.style.height = 'auto';
+                        clone.style.transform = 'translate(-10px, -20px)'; // Moves up & left
+                        clone.style.cursor = 'pointer';
+
+                        return clone.outerHTML;
+                    }
+                },
+                lock: {
+                    title: "The Lock",
+                    desc: "a padlock with an encrypted message. crack it before the timer runs out !",
+                    room: "screen-lock",
+                    art: () => {
+                        const original = document.getElementById('hotspot-lock').querySelector('img');
+                        const clone = original.cloneNode(true);
+
+                        // Banner-only scaling and position shifts
+                        clone.style.width = '400px';
+                        clone.style.height = 'auto';
+                        clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.cursor = 'pointer';
+
+                        return clone.outerHTML;
+                    }
+                },
+                cabinet: {
+                    title: "The File Cabinet",
+                    desc: "somewhere in these drawers is a tampered file. find the final code !.",
+                    room: "screen-cabinet",
+                    art: () => {
+                        const original = document.getElementById('hotspot-cabinet').querySelector('img');
+                        const clone = original.cloneNode(true);
+
+                        // Swapping the asset source for the popup banner view only
+                        clone.src = 'assets/newfileicon.png';
+
+                        // Banner-only scaling and position shifts
+                        clone.style.width = '400px';
+                        clone.style.height = 'auto';
+                        clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.cursor = 'pointer';
+
+                        return clone.outerHTML;
+                    }
+                },
+                treasure: {
+                    title: "The Treasure Box",
+                    desc: "locked with a final code. solve everything else first !",
+                    room: "screen-treasure",
+                    art: () => {
+                        const original = document.getElementById('hotspot-treasure').querySelector('img');
+                        const clone = original.cloneNode(true);
+
+                        // Banner-only scaling and position shifts
+                        clone.style.width = '400px';
+                        clone.style.height = 'auto';
+                        clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.cursor = 'pointer';
+
+                        return clone.outerHTML;
+                    }
+                }
+            };
+
+
+            const sceneBg = document.getElementById('sceneBg');
+            const detailOverlay = document.getElementById('detailOverlay');
+            const detailTitle = document.getElementById('detailTitle');
+            const detailDesc = document.getElementById('detailDesc');
+            const detailArt = document.getElementById('detailArt');
+            const detailStart = document.getElementById('detailStart');
+            let activeItem = null;
+
+            ['robot', 'lock', 'cabinet', 'treasure'].forEach(key => {
+                const btn = document.getElementById('hotspot-' + key);
+                btn.addEventListener('click', () => {
+                    if (key === 'treasure' && GATE_TREASURE_UNTIL_OTHERS_SOLVED) {
+                        const othersSolved = state.solved.robot && state.solved.lock && state.solved.cabinet;
+                        if (!othersSolved) {
+                            flashLockedMessage(btn);
+                            return;
+                        }
+                    }
+                    openDetail(key);
+                });
+            });
+
+            function flashLockedMessage(btn) {
+                btn.classList.add('shake');
+                setTimeout(() => btn.classList.remove('shake'), 350);
+            }
+
+            function openDetail(key) {
+                activeItem = key;
+                const info = ITEM_INFO[key];
+                detailTitle.textContent = info.title;
+                detailDesc.textContent = info.desc;
+                detailArt.innerHTML = info.art();
+                sceneBg.classList.add('blurred');
+                detailOverlay.classList.add('show');
+            }
+
+            function closeDetail() {
+                sceneBg.classList.remove('blurred');
+                detailOverlay.classList.remove('show');
+                activeItem = null;
+            }
+
+            document.getElementById('detailClose').addEventListener('click', closeDetail);
+
+            detailStart.addEventListener('click', () => {
+                const info = ITEM_INFO[activeItem];
+                closeDetail();
+
+                if (activeItem === 'robot') {
+                    markSolved('robot');
+                    window.location.href = 'robot-room.html';
+                    return;
+                }
+
+                if (activeItem === 'lock') startLockRoom();
+                if (activeItem === 'cabinet') startCabinetRoom();
+                goTo(info.room);
+            });
+
+            function markSolved(key) {
+                state.solved[key] = true;
+                document.getElementById('hotspot-' + key).classList.add('solved');
+            }
+
+            document.querySelectorAll('[data-back]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stopLockTimer();
+                    goTo('screen-main');
+                });
+            });
+
+            /* ============================================================
+               LOCK ROOM
+               ============================================================ */
+            const lockTimerEl = document.getElementById('lockTimer');
+            const lockInput = document.getElementById('lockInput');
+            const lockFeedback = document.getElementById('lockFeedback');
+            const lockArt = document.getElementById('lock-art');
+            const lockAudio = document.getElementById('lockAudio');
+            const cipherText = document.getElementById('cipherText');
+
+            document.getElementById('lockSubmit').addEventListener('click', submitLock);
+            lockInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitLock(); });
+
+            function startLockRoom() {
+                document.getElementById('lockStep1').style.display = "block";
+                document.getElementById('lockStep2').style.display = "none";
+                document.getElementById('lockCodeInput').value = "";
+                lockFeedback.textContent = "";
+                stopLockTimer();
+            }
+
+            document.getElementById('lockCodeSubmit').addEventListener('click', submitLockCode);
+            document.getElementById('lockCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitLockCode(); });
+
+            function submitLockCode() {
+                const codeInput = document.getElementById('lockCodeInput');
+                const guess = codeInput.value.trim().toUpperCase();
+                if (guess === ANSWERS.puzzle2Unlock.toUpperCase()) {
+                    document.getElementById('lockStep1').style.display = "none";
+                    document.getElementById('lockStep2').style.display = "block";
+                    lockFeedback.textContent = "";
+                    beginCipherChallenge();
+                } else {
+                    lockFeedback.textContent = "That code doesn't work — try again.";
+                    lockFeedback.className = "feedback bad";
+                    codeInput.parentElement.classList.add('shake');
+                    setTimeout(() => codeInput.parentElement.classList.remove('shake'), 350);
+                }
+            }
+
+            function beginCipherChallenge() {
+                cipherText.textContent = LOCK_CIPHER_DISPLAY;
+                lockInput.value = "";
+                lockArt.classList.remove('open');
+                state.lockTimeLeft = LOCK_TIME_SECONDS;
+                updateLockTimerDisplay();
+                lockAudio.currentTime = 0;
+                lockAudio.play().catch(() => {/* autoplay may be blocked until user interacts */ });
+                stopLockTimer();
+                state.lockInterval = setInterval(() => {
+                    state.lockTimeLeft--;
+                    updateLockTimerDisplay();
+                    if (state.lockTimeLeft <= 0) {
+                        stopLockTimer();
+                        lockAudio.pause();
+                        lockFeedback.textContent = "Oops! Try again.";
+                        lockFeedback.className = "feedback bad";
+                        setTimeout(() => beginCipherChallenge(), 1200); // restart just the cipher timer
+                    }
+                }, 1000);
+            }
+
+            function stopLockTimer() {
+                if (state.lockInterval) clearInterval(state.lockInterval);
+                state.lockInterval = null;
+            }
+
+            function updateLockTimerDisplay() {
+                const m = Math.floor(state.lockTimeLeft / 60);
+                const s = state.lockTimeLeft % 60;
+                lockTimerEl.textContent = m + ":" + String(s).padStart(2, '0');
+                lockTimerEl.classList.toggle('warn', state.lockTimeLeft <= 15);
+            }
+
+            function submitLock() {
+                const guess = lockInput.value.trim().toUpperCase().replace(/\s+/g, ' ');
+                const target = ANSWERS.lock.toUpperCase().replace(/\s+/g, ' ');
+                if (guess === target) {
+                    stopLockTimer();
+                    lockAudio.pause();
+                    lockArt.classList.add('open'); // 2-frame: closed -> open
+                    lockFeedback.textContent = "Unlocked!";
+                    lockFeedback.className = "feedback good";
+                    markSolved('lock');
+                    setTimeout(() => goTo('screen-main'), 900);
+                } else {
+                    lockFeedback.textContent = "Not quite — try again.";
+                    lockFeedback.className = "feedback bad";
+                    lockInput.parentElement.classList.add('shake');
+                    setTimeout(() => lockInput.parentElement.classList.remove('shake'), 350);
+                }
+            }
+
+            /* ============================================================
+               FILE CABINET ROOM
+               ============================================================ */
+            const cabinetFeedback = document.getElementById('cabinetFeedback');
+            const cabinetSceneWrap = document.getElementById('cabinetSceneWrap');
+            const cabinetDetailOverlay = document.getElementById('cabinetDetailOverlay');
+            const cabinetDrawerTitle = document.getElementById('cabinetDrawerTitle');
+            const cabinetFileList = document.getElementById('cabinetFileList');
+            const cabinetDrawerFeedback = document.getElementById('cabinetDrawerFeedback');
+            let activeDrawerIndex = null;
+
+            function startCabinetRoom() {
+                state.selectedFile = null;
+                cabinetFeedback.textContent = "";
+                document.getElementById('cabinetStep1').style.display = "block";
+                document.getElementById('cabinetStep2').style.display = "none";
+                document.getElementById('cabinetAnswerInput').value = "";
+                document.querySelectorAll('.cabinet-hotspot').forEach(h => h.classList.remove('solved-drawer'));
+                closeDrawerPanel();
+            }
+
+            const cabinetStep1 = document.getElementById('cabinetStep1');
+            const cabinetStep2 = document.getElementById('cabinetStep2');
+            const cabinetAnswerInput = document.getElementById('cabinetAnswerInput');
+
+            function submitCabinetAnswer() {
+                const guess = cabinetAnswerInput.value.trim().toUpperCase();
+                if (guess === ANSWERS.cabinet) {
+                    cabinetFeedback.textContent = "";
+                    cabinetStep1.style.display = "none";
+                    cabinetStep2.style.display = "block";
+                } else {
+                    cabinetFeedback.textContent = "Not quite — try again.";
+                    cabinetFeedback.className = "feedback bad";
+                    cabinetAnswerInput.parentElement.classList.add('shake');
+                    setTimeout(() => cabinetAnswerInput.parentElement.classList.remove('shake'), 350);
+                }
+            }
+            document.getElementById('cabinetAnswerSubmit').addEventListener('click', submitCabinetAnswer);
+            cabinetAnswerInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitCabinetAnswer(); });
+
+            // Each drawer hotspot opens that drawer's contents in the panel
+            document.querySelectorAll('.cabinet-hotspot').forEach(hotspot => {
+                hotspot.addEventListener('click', () => {
+                    const idx = parseInt(hotspot.dataset.drawer, 10);
+                    openDrawerPanel(idx);
+                });
+            });
+
+            function openDrawerPanel(idx) {
+                activeDrawerIndex = idx;
+                state.selectedFile = null;
+                const drawer = CABINET_DRAWERS[idx];
+                cabinetDrawerTitle.textContent = drawer.label;
+                cabinetDrawerFeedback.textContent = "";
+                cabinetFileList.innerHTML = "";
+                drawer.files.forEach(file => {
+                    const row = document.createElement('div');
+                    row.className = 'cabinet-file-row';
+                    row.innerHTML = `<span>${file.name}</span><span>${file.date}</span>`;
+                    row.addEventListener('click', () => {
+                        cabinetFileList.querySelectorAll('.cabinet-file-row').forEach(r => r.classList.remove('selected'));
+                        row.classList.add('selected');
+                        state.selectedFile = file;
+                    });
+                    cabinetFileList.appendChild(row);
+                });
+                cabinetSceneWrap.classList.add('blurred');
+                cabinetDetailOverlay.classList.add('show');
+            }
+
+            function closeDrawerPanel() {
+                cabinetSceneWrap.classList.remove('blurred');
+                cabinetDetailOverlay.classList.remove('show');
+                activeDrawerIndex = null;
+            }
+            document.getElementById('cabinetDetailClose').addEventListener('click', closeDrawerPanel);
+
+            document.getElementById('cabinetFileSelectBtn').addEventListener('click', () => {
+                if (!state.selectedFile) {
+                    cabinetDrawerFeedback.textContent = "Select a file first.";
+                    cabinetDrawerFeedback.className = "feedback bad";
+                    return;
+                }
+                if (state.selectedFile.isAnswer) {
+                    cabinetDrawerFeedback.innerHTML = "That's the one! Inside is a code: <strong>" + ANSWERS.treasure + "</strong> — use it on the treasure chest.";
+                    cabinetDrawerFeedback.className = "feedback good";
+                    document.querySelector(`.cabinet-hotspot[data-drawer="${activeDrawerIndex}"]`).classList.add('solved-drawer');
+                    markSolved('cabinet');
+                    setTimeout(() => { closeDrawerPanel(); goTo('screen-main'); }, 2200);
+                } else {
+                    cabinetDrawerFeedback.textContent = "Oops! Try again.";
+                    cabinetDrawerFeedback.className = "feedback bad";
+                }
+            });
+
+            /* ============================================================
+               TREASURE ROOM
+               ============================================================ */
+            const treasureInput = document.getElementById('treasureInput');
+            const treasureFeedback = document.getElementById('treasureFeedback');
+            const treasureArt = document.getElementById('treasure-art');
+
+            document.getElementById('treasureSubmit').addEventListener('click', submitTreasure);
+            treasureInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitTreasure(); });
+
+            function submitTreasure() {
+                const guess = treasureInput.value.trim().toUpperCase();
+                if (guess === ANSWERS.treasure) {
+                    treasureArt.classList.add('open'); // 2-frame: closed -> open
+                    treasureFeedback.textContent = "It's open!";
+                    treasureFeedback.className = "feedback good";
+                    markSolved('treasure');
+                    document.getElementById('creditLine').textContent = "Made by " + CREDIT_NAME;
+                    setTimeout(() => goTo('screen-win'), 1000);
+                } else {
+                    treasureFeedback.textContent = "Try again!";
+                    treasureFeedback.className = "feedback bad";
+                    treasureInput.parentElement.classList.add('shake');
+                    setTimeout(() => treasureInput.parentElement.classList.remove('shake'), 350);
+                }
+            }
+        </script>
+</body>
+
+</html>
