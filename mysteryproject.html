@@ -197,6 +197,27 @@
             display: flex;
         }
 
+        .locked-hint {
+            position: fixed;
+            left: 50%;
+            bottom: 32px;
+            transform: translateX(-50%);
+            z-index: 70;
+            display: none;
+            background: #ffd7e8;
+            color: #7a3b63;
+            border: 4px solid #7a3b63;
+            box-shadow: 4px 4px 0 rgba(122, 59, 99, 0.45);
+            padding: 12px 18px;
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .locked-hint.show {
+            display: block;
+        }
+
         .detail-line {
             position: relative;
             width: 100%;
@@ -269,6 +290,36 @@
             line-height: 1.4;
             color: #6b3556;
             margin-bottom: 18px;
+        }
+
+        .detail-access {
+            display: none;
+            margin-bottom: 14px;
+        }
+
+        .detail-access.show {
+            display: block;
+        }
+
+        .detail-access .field-row {
+            justify-content: flex-start;
+            margin-top: 0;
+        }
+
+        .detail-access input[type="text"] {
+            border: 3px solid #7a3b63;
+            background: #fff;
+            color: #5c2a49;
+        }
+
+        .detail-access input[type="text"]::placeholder {
+            color: rgba(92, 42, 73, 0.45);
+        }
+
+        .detail-access .feedback {
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: 20px;
+            text-align: left;
         }
 
         .btn {
@@ -612,15 +663,182 @@
         /* ============================================================
    7. LOCK ROOM
    ============================================================ */
-        .timer {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 6px;
+        .flip-clock {
+            --flip-card-width: clamp(68px, 9vw, 92px);
+            --flip-card-height: clamp(76px, 10vw, 104px);
+            --flip-card-font: clamp(44px, 6vw, 66px);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 10px;
+            perspective: 400px;
+            margin: 8px auto 18px;
         }
 
-        .timer.warn {
-            color: #ff6b6b;
+        .flip-clock.warn .card__top,
+        .flip-clock.warn .card__bottom,
+        .flip-clock.warn .card__back::before,
+        .flip-clock.warn .card__back::after {
+            color: #ffd7e8;
+            background: #6b1f35;
+        }
+
+        .flip-clock__divider {
+            flex: 0 0 auto;
+            align-self: flex-start;
+            padding-top: calc(var(--flip-card-height) * 0.23);
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: var(--flip-card-font);
+            line-height: 1;
+            color: #ffd7e8;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+        }
+
+        .flip-clock__piece {
+            display: block;
+            flex: 0 0 var(--flip-card-width);
+            text-align: center;
+            width: var(--flip-card-width);
+            max-width: var(--flip-card-width);
+            overflow: visible;
+        }
+
+        .flip-clock__slot {
+            display: block;
+            margin-top: 8px;
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.76);
+        }
+
+        .card {
+            display: block;
+            position: relative;
+            width: var(--flip-card-width);
+            min-width: var(--flip-card-width);
+            max-width: var(--flip-card-width);
+            height: var(--flip-card-height);
+            min-height: var(--flip-card-height);
+            max-height: var(--flip-card-height);
+            font-family: 'VT323', 'Trebuchet MS', monospace;
+            font-size: var(--flip-card-font);
+            line-height: var(--flip-card-height);
+            filter: drop-shadow(5px 5px 0 rgba(0, 0, 0, 0.28));
+            contain: layout paint;
+        }
+
+        .card__top,
+        .card__bottom,
+        .card__back::before,
+        .card__back::after {
+            display: block;
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            height: calc(var(--flip-card-height) / 2);
+            min-height: calc(var(--flip-card-height) / 2);
+            max-height: calc(var(--flip-card-height) / 2);
+            padding: 0 0.14em;
+            color: #ccc;
+            background: #222;
+            border-radius: 0.15em 0.15em 0 0;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+            overflow: hidden;
+            text-align: center;
+            line-height: var(--flip-card-height);
+            box-sizing: border-box;
+        }
+
+        .card__bottom {
+            position: absolute;
+            top: calc(var(--flip-card-height) / 2);
+            left: 0;
+            color: #fff;
+            background: #393939;
+            border-top: solid 1px #000;
+            border-radius: 0 0 0.15em 0.15em;
+            pointer-events: none;
+        }
+
+        .card__bottom::after {
+            display: block;
+            margin-top: calc(var(--flip-card-height) / -2);
+            line-height: var(--flip-card-height);
+        }
+
+        .card__back::before,
+        .card__bottom::after {
+            content: attr(data-value);
+        }
+
+        .card__back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            height: var(--flip-card-height);
+            min-height: var(--flip-card-height);
+            max-height: var(--flip-card-height);
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .card__back::before {
+            position: relative;
+            z-index: -1;
+        }
+
+        .flip .card__back::before {
+            animation: flipTop 0.3s cubic-bezier(.37, .01, .94, .35);
+            animation-fill-mode: both;
+            transform-origin: center bottom;
+        }
+
+        .flip .card__back .card__bottom {
+            transform-origin: center top;
+            animation: flipBottom 0.6s cubic-bezier(.15, .45, .28, 1);
+            animation-fill-mode: both;
+        }
+
+        @keyframes flipTop {
+            0% {
+                transform: rotateX(0deg);
+                z-index: 2;
+            }
+
+            0%,
+            99% {
+                opacity: 0.99;
+            }
+
+            100% {
+                transform: rotateX(-90deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes flipBottom {
+
+            0%,
+            50% {
+                z-index: -1;
+                transform: rotateX(90deg);
+                opacity: 0;
+            }
+
+            51% {
+                opacity: 0.99;
+            }
+
+            100% {
+                z-index: 5;
+                transform: rotateX(0deg);
+                opacity: 0.99;
+            }
         }
 
         .cipher-box {
@@ -630,6 +848,36 @@
             font-size: 20px;
             letter-spacing: 3px;
             margin: 18px 0;
+        }
+
+        .lock-complete-panel {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .lock-complete-panel.show {
+            display: flex;
+        }
+
+        .lock-complete-card {
+            background: #ffd7e8;
+            color: #7a3b63;
+            border: 5px solid #7a3b63;
+            box-shadow: 6px 6px 0 rgba(122, 59, 99, 0.45);
+            padding: 24px;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .lock-complete-card h3 {
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 14px;
+            margin-bottom: 16px;
         }
 
         /* 2-frame lock animation: swap this class to swap the art frame */
@@ -738,7 +986,7 @@
    ============================================================ */
         #treasure-art {
             width: 160px;
-            height: 160px;
+            height: 160px;  
             margin-bottom: 16px;
             transition: transform 0.15s ease;
         }
@@ -806,7 +1054,7 @@
             </button>
 
             <button class="hotspot" id="hotspot-treasure" style="top:80.1%; left:73.4%; width:40%; height:40%;">
-                <img src="assets/hotspot-chest.png" alt="">
+                <img src="assets/hotspot-treasure.png" alt="">
             </button>
 
             <!-- Ambient lighting layers — sit above the scene art but never block hotspot clicks -->
@@ -821,11 +1069,20 @@
                     <div class="detail-text">
                         <h2 id="detailTitle"></h2>
                         <p id="detailDesc"></p>
+                        <div class="detail-access" id="detailAccess">
+                            <div class="field-row">
+                                <input type="text" id="detailAccessInput" placeholder="ACCESS CODE" autocomplete="off">
+                                <button class="btn start-btn" id="detailAccessSubmit">Enter</button>
+                            </div>
+                            <div class="feedback" id="detailAccessFeedback"></div>
+                        </div>
                         <button class="btn start-btn" id="detailStart">Start</button>
                     </div>
                 </div>
             </div>
+            <div class="locked-hint" id="lockedHint">Solve the robot, lock, and cabinet first.</div>
         </div>
+    </div>
 
         <!-- =========================================================
      ROBOT ROOM
@@ -833,6 +1090,33 @@
         <div id="screen-robot" class="screen">
             <div class="room" style="justify-content:flex-start; align-items:flex-start;">
                 <button class="back-btn pink-back" data-back>Go Back</button>
+                <div class="pixel-window" style="margin-top:70px;">
+                    <div class="pixel-titlebar">
+                        <span>CHEESEPUFF.EXE</span>
+                        <div class="pixel-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                    <div class="pixel-menubar">
+                        <span>File</span>
+                        <span>Maze</span>
+                        <span>Code</span>
+                    </div>
+                    <div class="pixel-content">
+                        <img id="robot-art" src="assets/hotspot-robot.png" alt="">
+                        <div class="pixel-dialog">
+                            <h2>Cheesepuff !!</h2>
+                            <p class="prompt">Type the word Cheesepuff discovered in the maze.</p>
+                            <div class="field-row">
+                                <input type="text" id="robotInput" placeholder="ROBOT CODE" autocomplete="off">
+                                <button class="btn" id="robotSubmit">Enter</button>
+                            </div>
+                            <div class="feedback" id="robotFeedback"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -847,24 +1131,42 @@
                     <path d="M35 45 V30 a15 15 0 0 1 30 0 V45" stroke="#ffd166" stroke-width="8" fill="none" />
                 </svg>
                 <h2>The Lock</h2>
-                <div id="lockStep1">
-                    <p class="prompt">enter the unlock code Cheesepuff gave you !</p>
-                    <div class="field-row">
-                        <input type="text" id="lockCodeInput" placeholder="UNLOCK CODE" autocomplete="off">
-                        <button class="btn" id="lockCodeSubmit">Enter</button>
+                <div id="lockStep2">
+                    <div class="timer flip-clock" id="lockTimer" aria-label="1 minute 30 seconds">
+                        <span class="flip-clock__piece" data-unit="minutes">
+                            <b class="flip-clock__card card">
+                                <b class="card__top">01</b>
+                                <b class="card__bottom" data-value="01"></b>
+                                <b class="card__back" data-value="01"><b class="card__bottom" data-value="01"></b></b>
+                            </b>
+                            <span class="flip-clock__slot">Minutes</span>
+                        </span>
+                        <span class="flip-clock__divider">:</span>
+                        <span class="flip-clock__piece" data-unit="seconds">
+                            <b class="flip-clock__card card">
+                                <b class="card__top">30</b>
+                                <b class="card__bottom" data-value="30"></b>
+                                <b class="card__back" data-value="30"><b class="card__bottom" data-value="30"></b></b>
+                            </b>
+                            <span class="flip-clock__slot">Seconds</span>
+                        </span>
                     </div>
-                </div>
-                <div id="lockStep2" style="display:none;">
-                    <div class="timer" id="lockTimer">1:30</div>
-                    <p class="prompt">Decrypt the whole message before time runs out, and type it out exactly.</p>
+                    <p class="prompt">Decrypt the Caesar cipher before time runs out, and type the whole message exactly.</p>
                     <div class="cipher-box" id="cipherText"></div>
                     <div class="field-row">
                         <input type="text" id="lockInput" placeholder="TYPE THE DECRYPTED MESSAGE" autocomplete="off"
                             style="width:360px;">
                         <button class="btn" id="lockSubmit">Unlock</button>
                     </div>
+                    <button class="btn secondary" id="lockRestart" style="display:none; margin-top:18px;">Restart</button>
                 </div>
                 <div class="feedback" id="lockFeedback"></div>
+            </div>
+            <div class="lock-complete-panel" id="lockCompletePanel">
+                <div class="lock-complete-card">
+                    <h3>Correct, move to next puzzle.</h3>
+                    <button class="btn start-btn" id="lockCompleteBack">Go Back</button>
+                </div>
             </div>
             <!-- Swap this src for your own licensed audio file -->
             <audio id="lockAudio" src="assets/lock-theme.mp3" loop></audio>
@@ -901,8 +1203,8 @@
                     </div>
 
                     <div class="cabinet-detail-overlay" id="cabinetDetailOverlay">
-                        <button class="detail-close" id="cabinetDetailClose">✕</button>
                         <div class="detail-line" style="max-width:520px;">
+                            <button class="detail-close" id="cabinetDetailClose">✕</button>
                             <div class="detail-text" style="flex:1;">
                                 <h2 id="cabinetDrawerTitle"></h2>
                                 <div id="cabinetFileList"></div>
@@ -947,32 +1249,27 @@
         </div>
 
         <script>
-/* ============================================================
-   CONFIG — everything you're likely to tune lives here
-   ============================================================ */
-/* THE CHAIN:
-   1. Physical robot (in the room) says the word "CHEESE" -> kids type
-      that into the digital robot below.
-   2. Solving the robot reveals an unlock code (4-digit or word) -->
-      kids need this to open Puzzle 2(the Lock).
-   3. In the Lock room, kids first enter that unlock code, THEN decrypt
-      a cipher that reads "CHEESEBALL NEEDS TO BE MORE JOLLY AND
-            WHIMSICAL." They only need to type the key word: CHEESEBALL.
-            4. Puzzle 3(the Cabinet) finds the tampered file, then directly
-      asks "Who needs to be more jolly and whimsical?" -- answer:
-            CHEESEBALL(known from step 3).
-   5. Solving Puzzle 3 reveals a code(4 - digit or word) -> typed into
-      the Treasure Chest to escape.
-*/
-            const ANSWERS = {
-                robot: "CHEESE",            // <-- physical robot says this word
-                puzzle2Unlock: "POWERPUFFS",      // shown after solving robot; needed to open Puzzle 2 (edit freely, digits or word)
-                lock: "CHEESEBALL NEEDS TO BE MORE JOLLY AND WHIMSICAL",  // full decrypted sentence, typed exactly
-                cabinet: "CHEESEBALL",      // answer to "who needs to be more jolly and whimsical?"
-                treasure: "KRISHNA"            // shown after solving Puzzle 3; needed to open the treasure chest (edit freely, digits or word)
+//    ============================================================
+//    CONFIG — everything you're likely to tune lives here
+//    ============================================================ */
+//     THE CHAIN:
+//    1. Physical robot (in the room) reveals a secret word -> kids type
+//       that into the digital robot below.
+//    2. Solving the robot reveals an unlock code (4-digit or word) -->
+//       kids need this to open Puzzle 2(the Lock).
+//    3. In the Lock room, kids decrypt a Caesar cipher under a timer.
+//    4. Puzzle 3(the Cabinet) asks a question based on the decoded message.
+//    5. Solving Puzzle 3 reveals a code(4 - digit or word) -> typed into
+//       the Treasure Chest to escape.
+
+            const ANSWER_HASHES = {
+                robot: "4914135a0ad16ece63185c2c2be51e66273c267e62e693f8713affaf0a00fa2e",
+                puzzle2Unlock: "31363c8f9525c8319aa76b067d6482ecf02b60053d3d098bfbf8b8e49c60c976",
+                lock: "b047b61214db900135b68f0defbf66bb59df03979731ac0b1a606b6dd24d1220",
+                cabinet: "a63cc20d594d4d7aa197d960e6b44df1e31a5345286b7344c866e59234e6d92f",
+                treasure: "2852a0bc97abb2412fd346a54364be2404c66bb52f0b3c8890bb5ca83c2b0bb6"
             };
-            // Ciphertext below is "CHEESEBALL NEEDS TO BE MORE JOLLY AND WHIMSICAL" shifted by 3
-            // (a classic Caesar cipher -- kids can decode it with a cipher wheel or by hand).
+            // Classic Caesar cipher -- kids can decode it with a cipher wheel or by hand.
             const LOCK_CIPHER_DISPLAY = "FKHHVHEDOO QHHGV WR EH PRUH MROOB DQG ZKLPVLFDO";
             const LOCK_TIME_SECONDS = 90;          // 1:30, timer starts once they're past the unlock-code step
             const CREDIT_NAME = "The Powerpuff Girls: Rama, Rody, & Sofia !!";            // put your name/team here
@@ -1114,6 +1411,11 @@
             const detailDesc = document.getElementById('detailDesc');
             const detailArt = document.getElementById('detailArt');
             const detailStart = document.getElementById('detailStart');
+            const detailAccess = document.getElementById('detailAccess');
+            const detailAccessInput = document.getElementById('detailAccessInput');
+            const detailAccessFeedback = document.getElementById('detailAccessFeedback');
+            const detailAccessSubmit = document.getElementById('detailAccessSubmit');
+            const lockedHint = document.getElementById('lockedHint');
             let activeItem = null;
 
             ['robot', 'lock', 'cabinet', 'treasure'].forEach(key => {
@@ -1132,7 +1434,9 @@
 
             function flashLockedMessage(btn) {
                 btn.classList.add('shake');
+                lockedHint.classList.add('show');
                 setTimeout(() => btn.classList.remove('shake'), 350);
+                setTimeout(() => lockedHint.classList.remove('show'), 1400);
             }
 
             function openDetail(key) {
@@ -1141,6 +1445,12 @@
                 detailTitle.textContent = info.title;
                 detailDesc.textContent = info.desc;
                 detailArt.innerHTML = info.art();
+                detailAccess.classList.toggle('show', key === 'lock');
+                detailStart.style.display = key === 'lock' ? 'none' : 'inline-block';
+                detailStart.textContent = 'Start';
+                detailAccessInput.value = "";
+                detailAccessFeedback.textContent = "";
+                detailAccessFeedback.className = "feedback";
                 sceneBg.classList.add('blurred');
                 detailOverlay.classList.add('show');
             }
@@ -1153,18 +1463,34 @@
 
             document.getElementById('detailClose').addEventListener('click', closeDetail);
 
-            detailStart.addEventListener('click', () => {
-                const info = ITEM_INFO[activeItem];
-                closeDetail();
-
-                if (activeItem === 'robot') {
-                    markSolved('robot');
-                    window.location.href = 'robot-room.html';
+            async function submitDetailAccessCode() {
+                const guess = detailAccessInput.value.trim().toUpperCase();
+                if (await hashText(guess) === ANSWER_HASHES.puzzle2Unlock) {
+                    detailDesc.textContent = "Access granted. Are you ready?";
+                    detailAccess.classList.remove('show');
+                    detailAccessFeedback.textContent = "";
+                    detailStart.style.display = 'inline-block';
+                    detailStart.textContent = 'Start';
                     return;
                 }
 
-                if (activeItem === 'lock') startLockRoom();
-                if (activeItem === 'cabinet') startCabinetRoom();
+                detailAccessFeedback.textContent = "That access code doesn't work. Try again.";
+                detailAccessFeedback.className = "feedback bad";
+                detailAccessInput.parentElement.classList.add('shake');
+                setTimeout(() => detailAccessInput.parentElement.classList.remove('shake'), 350);
+            }
+
+            detailAccessSubmit.addEventListener('click', submitDetailAccessCode);
+            detailAccessInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitDetailAccessCode(); });
+
+            detailStart.addEventListener('click', () => {
+                const selectedItem = activeItem;
+                const info = ITEM_INFO[selectedItem];
+                closeDetail();
+
+                if (selectedItem === 'robot') startRobotRoom();
+                if (selectedItem === 'lock') startLockRoom();
+                if (selectedItem === 'cabinet') startCabinetRoom();
                 goTo(info.room);
             });
 
@@ -1181,6 +1507,42 @@
             });
 
             /* ============================================================
+               ROBOT ROOM
+               ============================================================ */
+            const robotInput = document.getElementById('robotInput');
+            const robotFeedback = document.getElementById('robotFeedback');
+
+            document.getElementById('robotSubmit').addEventListener('click', submitRobot);
+            robotInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitRobot(); });
+
+            function startRobotRoom() {
+                robotInput.value = "";
+                robotFeedback.textContent = "";
+                robotFeedback.className = "feedback";
+            }
+
+            async function hashText(value) {
+                const bytes = new TextEncoder().encode(value);
+                const digest = await crypto.subtle.digest('SHA-256', bytes);
+                return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+            }
+
+            async function submitRobot() {
+                const guess = robotInput.value.trim().toUpperCase();
+                if (await hashText(guess) === ANSWER_HASHES.robot) {
+                    robotFeedback.innerHTML = "Correct! Lock code: <strong>POWERPUFFS</strong>";
+                    robotFeedback.className = "feedback good";
+                    markSolved('robot');
+                    setTimeout(() => goTo('screen-main'), 2200);
+                } else {
+                    robotFeedback.textContent = "Not quite — try again.";
+                    robotFeedback.className = "feedback bad";
+                    robotInput.parentElement.classList.add('shake');
+                    setTimeout(() => robotInput.parentElement.classList.remove('shake'), 350);
+                }
+            }
+
+            /* ============================================================
                LOCK ROOM
                ============================================================ */
             const lockTimerEl = document.getElementById('lockTimer');
@@ -1189,41 +1551,34 @@
             const lockArt = document.getElementById('lock-art');
             const lockAudio = document.getElementById('lockAudio');
             const cipherText = document.getElementById('cipherText');
+            const lockRestart = document.getElementById('lockRestart');
+            const lockCompletePanel = document.getElementById('lockCompletePanel');
+            const lockTimerPieces = {
+                minutes: lockTimerEl.querySelector('[data-unit="minutes"]'),
+                seconds: lockTimerEl.querySelector('[data-unit="seconds"]')
+            };
 
             document.getElementById('lockSubmit').addEventListener('click', submitLock);
             lockInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitLock(); });
+            lockRestart.addEventListener('click', beginCipherChallenge);
+            document.getElementById('lockCompleteBack').addEventListener('click', () => goTo('screen-main'));
 
             function startLockRoom() {
-                document.getElementById('lockStep1').style.display = "block";
-                document.getElementById('lockStep2').style.display = "none";
-                document.getElementById('lockCodeInput').value = "";
                 lockFeedback.textContent = "";
+                lockCompletePanel.classList.remove('show');
                 stopLockTimer();
-            }
-
-            document.getElementById('lockCodeSubmit').addEventListener('click', submitLockCode);
-            document.getElementById('lockCodeInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitLockCode(); });
-
-            function submitLockCode() {
-                const codeInput = document.getElementById('lockCodeInput');
-                const guess = codeInput.value.trim().toUpperCase();
-                if (guess === ANSWERS.puzzle2Unlock.toUpperCase()) {
-                    document.getElementById('lockStep1').style.display = "none";
-                    document.getElementById('lockStep2').style.display = "block";
-                    lockFeedback.textContent = "";
-                    beginCipherChallenge();
-                } else {
-                    lockFeedback.textContent = "That code doesn't work — try again.";
-                    lockFeedback.className = "feedback bad";
-                    codeInput.parentElement.classList.add('shake');
-                    setTimeout(() => codeInput.parentElement.classList.remove('shake'), 350);
-                }
+                beginCipherChallenge();
             }
 
             function beginCipherChallenge() {
                 cipherText.textContent = LOCK_CIPHER_DISPLAY;
                 lockInput.value = "";
+                lockInput.disabled = false;
+                document.getElementById('lockSubmit').disabled = false;
+                lockRestart.style.display = "none";
                 lockArt.classList.remove('open');
+                lockCompletePanel.classList.remove('show');
+                lockFeedback.textContent = "";
                 state.lockTimeLeft = LOCK_TIME_SECONDS;
                 updateLockTimerDisplay();
                 lockAudio.currentTime = 0;
@@ -1235,9 +1590,11 @@
                     if (state.lockTimeLeft <= 0) {
                         stopLockTimer();
                         lockAudio.pause();
-                        lockFeedback.textContent = "Oops! Try again.";
+                        lockInput.disabled = true;
+                        document.getElementById('lockSubmit').disabled = true;
+                        lockRestart.style.display = "inline-block";
+                        lockFeedback.textContent = "Time's up. Restart?";
                         lockFeedback.className = "feedback bad";
-                        setTimeout(() => beginCipherChallenge(), 1200); // restart just the cipher timer
                     }
                 }, 1000);
             }
@@ -1250,23 +1607,45 @@
             function updateLockTimerDisplay() {
                 const m = Math.floor(state.lockTimeLeft / 60);
                 const s = state.lockTimeLeft % 60;
-                lockTimerEl.textContent = m + ":" + String(s).padStart(2, '0');
+                updateFlipPiece(lockTimerPieces.minutes, m);
+                updateFlipPiece(lockTimerPieces.seconds, s);
+                lockTimerEl.setAttribute('aria-label', m + ' minutes ' + s + ' seconds');
                 lockTimerEl.classList.toggle('warn', state.lockTimeLeft <= 15);
             }
 
-            function submitLock() {
+            function updateFlipPiece(piece, value) {
+                const nextValue = String(value).padStart(2, '0');
+                if (piece.dataset.value === nextValue) return;
+
+                const top = piece.querySelector('.card__top');
+                const bottom = piece.querySelector('.card__bottom');
+                const back = piece.querySelector('.card__back');
+                const backBottom = piece.querySelector('.card__back .card__bottom');
+                const previousValue = piece.dataset.value || nextValue;
+
+                back.setAttribute('data-value', previousValue);
+                bottom.setAttribute('data-value', previousValue);
+                piece.dataset.value = nextValue;
+                top.textContent = nextValue;
+                backBottom.setAttribute('data-value', nextValue);
+
+                piece.classList.remove('flip');
+                void piece.offsetWidth;
+                piece.classList.add('flip');
+            }
+
+            async function submitLock() {
                 const guess = lockInput.value.trim().toUpperCase().replace(/\s+/g, ' ');
-                const target = ANSWERS.lock.toUpperCase().replace(/\s+/g, ' ');
-                if (guess === target) {
+                if (await hashText(guess) === ANSWER_HASHES.lock) {
                     stopLockTimer();
                     lockAudio.pause();
                     lockArt.classList.add('open'); // 2-frame: closed -> open
-                    lockFeedback.textContent = "Unlocked!";
+                    lockFeedback.textContent = "";
                     lockFeedback.className = "feedback good";
                     markSolved('lock');
-                    setTimeout(() => goTo('screen-main'), 900);
+                    lockCompletePanel.classList.add('show');
                 } else {
-                    lockFeedback.textContent = "Not quite — try again.";
+                    lockFeedback.textContent = "Try again.";
                     lockFeedback.className = "feedback bad";
                     lockInput.parentElement.classList.add('shake');
                     setTimeout(() => lockInput.parentElement.classList.remove('shake'), 350);
@@ -1298,9 +1677,9 @@
             const cabinetStep2 = document.getElementById('cabinetStep2');
             const cabinetAnswerInput = document.getElementById('cabinetAnswerInput');
 
-            function submitCabinetAnswer() {
+            async function submitCabinetAnswer() {
                 const guess = cabinetAnswerInput.value.trim().toUpperCase();
-                if (guess === ANSWERS.cabinet) {
+                if (await hashText(guess) === ANSWER_HASHES.cabinet) {
                     cabinetFeedback.textContent = "";
                     cabinetStep1.style.display = "none";
                     cabinetStep2.style.display = "block";
@@ -1358,7 +1737,7 @@
                     return;
                 }
                 if (state.selectedFile.isAnswer) {
-                    cabinetDrawerFeedback.innerHTML = "That's the one! Inside is a code: <strong>" + ANSWERS.treasure + "</strong> — use it on the treasure chest.";
+                    cabinetDrawerFeedback.innerHTML = "That's the one! Inside is a code: <strong>KRISHNA</strong> — use it on the treasure chest.";
                     cabinetDrawerFeedback.className = "feedback good";
                     document.querySelector(`.cabinet-hotspot[data-drawer="${activeDrawerIndex}"]`).classList.add('solved-drawer');
                     markSolved('cabinet');
@@ -1379,9 +1758,9 @@
             document.getElementById('treasureSubmit').addEventListener('click', submitTreasure);
             treasureInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitTreasure(); });
 
-            function submitTreasure() {
+            async function submitTreasure() {
                 const guess = treasureInput.value.trim().toUpperCase();
-                if (guess === ANSWERS.treasure) {
+                if (await hashText(guess) === ANSWER_HASHES.treasure) {
                     treasureArt.classList.add('open'); // 2-frame: closed -> open
                     treasureFeedback.textContent = "It's open!";
                     treasureFeedback.className = "feedback good";
