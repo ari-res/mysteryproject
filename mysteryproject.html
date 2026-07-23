@@ -981,6 +981,37 @@
             color: #1a1a1a;
         }
 
+        .cabinet-result-art {
+            width: min(320px, 70vw);
+            aspect-ratio: 1 / 1;
+            margin: 0 auto 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.38) 25%, transparent 25%) 0 0 / 24px 24px,
+                linear-gradient(135deg, transparent 75%, rgba(255, 255, 255, 0.3) 75%) 0 0 / 24px 24px,
+                #f7c9df;
+            border: 5px solid #7a3b63;
+            color: #7a3b63;
+            font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
+            font-size: 12px;
+            text-align: center;
+            padding: 18px;
+            overflow: hidden;
+        }
+
+        .cabinet-result-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            image-rendering: pixelated;
+        }
+
+        .cabinet-result-text {
+            text-align: center;
+        }
+
         /* ============================================================
    9. TREASURE ROOM
    ============================================================ */
@@ -1210,6 +1241,19 @@
                                 <div id="cabinetFileList"></div>
                                 <button class="btn" id="cabinetFileSelectBtn">Select This File</button>
                                 <div class="feedback" id="cabinetDrawerFeedback"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cabinet-detail-overlay" id="cabinetResultOverlay">
+                        <div class="detail-line" style="max-width:620px;">
+                            <button class="detail-close" id="cabinetResultClose">✕</button>
+                            <div class="detail-text cabinet-result-text" style="flex:1;">
+                                <h2>File Found</h2>
+                                <div class="cabinet-result-art" id="cabinetResultArt">
+                                    Image goes here
+                                </div>
+                                <p>That's the one! Inside is a code: <strong>KRISHNA</strong> — use it on the treasure chest.</p>
+                                <button class="btn start-btn" id="cabinetResultBack">Go Back</button>
                             </div>
                         </div>
                     </div>
@@ -1658,6 +1702,7 @@
             const cabinetFeedback = document.getElementById('cabinetFeedback');
             const cabinetSceneWrap = document.getElementById('cabinetSceneWrap');
             const cabinetDetailOverlay = document.getElementById('cabinetDetailOverlay');
+            const cabinetResultOverlay = document.getElementById('cabinetResultOverlay');
             const cabinetDrawerTitle = document.getElementById('cabinetDrawerTitle');
             const cabinetFileList = document.getElementById('cabinetFileList');
             const cabinetDrawerFeedback = document.getElementById('cabinetDrawerFeedback');
@@ -1670,6 +1715,7 @@
                 document.getElementById('cabinetStep2').style.display = "none";
                 document.getElementById('cabinetAnswerInput').value = "";
                 document.querySelectorAll('.cabinet-hotspot').forEach(h => h.classList.remove('solved-drawer'));
+                cabinetResultOverlay.classList.remove('show');
                 closeDrawerPanel();
             }
 
@@ -1729,6 +1775,22 @@
                 activeDrawerIndex = null;
             }
             document.getElementById('cabinetDetailClose').addEventListener('click', closeDrawerPanel);
+            document.getElementById('cabinetResultClose').addEventListener('click', closeCabinetResult);
+            document.getElementById('cabinetResultBack').addEventListener('click', () => {
+                closeCabinetResult();
+                goTo('screen-main');
+            });
+
+            function openCabinetResult() {
+                cabinetSceneWrap.classList.add('blurred');
+                cabinetDetailOverlay.classList.remove('show');
+                cabinetResultOverlay.classList.add('show');
+            }
+
+            function closeCabinetResult() {
+                cabinetSceneWrap.classList.remove('blurred');
+                cabinetResultOverlay.classList.remove('show');
+            }
 
             document.getElementById('cabinetFileSelectBtn').addEventListener('click', () => {
                 if (!state.selectedFile) {
@@ -1737,11 +1799,9 @@
                     return;
                 }
                 if (state.selectedFile.isAnswer) {
-                    cabinetDrawerFeedback.innerHTML = "That's the one! Inside is a code: <strong>KRISHNA</strong> — use it on the treasure chest.";
-                    cabinetDrawerFeedback.className = "feedback good";
                     document.querySelector(`.cabinet-hotspot[data-drawer="${activeDrawerIndex}"]`).classList.add('solved-drawer');
                     markSolved('cabinet');
-                    setTimeout(() => { closeDrawerPanel(); goTo('screen-main'); }, 2200);
+                    openCabinetResult();
                 } else {
                     cabinetDrawerFeedback.textContent = "Oops! Try again.";
                     cabinetDrawerFeedback.className = "feedback bad";
