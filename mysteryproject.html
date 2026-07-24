@@ -412,34 +412,42 @@
             max-width: 520px;
         }
 
-        /* Puzzle 3 (File Cabinet) header -- pinned to the top of the room,
-   purple pixel font, so it stays clear of the puzzl3bg.png scene below */
-        #screen-cabinet .room>h2 {
+        /* Puzzle 3 labels sit on top of the 16:9 background art. */
+        .cabinet-scene-title {
             position: absolute;
-            top: 3%;
+            top: 2.7%;
             left: 50%;
             transform: translate(-50%, 0);
             font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
-            font-size: 20px;
-            color: #a259d9;
+            font-size: clamp(11px, 1.45cqw, 24px);
+            color: #6f3d54;
+            text-shadow: 2px 2px 0 rgba(255, 230, 178, 0.9);
             margin: 0;
-            z-index: 3;
+            z-index: 6;
+            white-space: nowrap;
         }
 
-        #screen-cabinet .room .prompt {
+        .cabinet-side-note {
             position: absolute;
-            top: 9%;
-            left: 50%;
-            transform: translate(-50%, 0);
-            width: 90%;
-            max-width: 560px;
+            width: 16%;
             font-family: 'Press Start 2P', 'Trebuchet MS', sans-serif;
-            font-size: 11px;
+            font-size: clamp(6px, 0.78cqw, 12px);
             line-height: 1.7;
-            color: #a259d9;
-            opacity: 1;
+            color: #7f4f39;
+            text-shadow: 1px 1px 0 rgba(255, 238, 198, 0.9);
+            text-align: center;
             margin: 0;
-            z-index: 3;
+            z-index: 6;
+        }
+
+        .cabinet-side-note.left {
+            top: 37%;
+            left: 3.5%;
+        }
+
+        .cabinet-side-note.right {
+            top: 36%;
+            right: 3.4%;
         }
 
         .back-btn {
@@ -1079,24 +1087,34 @@
         /* ============================================================
    8. FILE CABINET ROOM (image-based scene)
    ============================================================ */
+        #screen-cabinet .room {
+            padding: 0;
+        }
+
+        #screen-cabinet .back-btn {
+            z-index: 12;
+        }
+
         .cabinet-scene-wrap {
             position: relative;
-            width: min(92vw, calc((100vh - 220px) * 16 / 9));
-            max-width: 960px;
+            width: min(100vw, calc(100vh * 16 / 9));
+            height: min(100vh, calc(100vw * 9 / 16));
+            max-width: none;
             aspect-ratio: 16 / 9;
-            margin: 130px auto 16px;
+            margin: 0 auto;
             overflow: hidden;
+            container-type: inline-size;
         }
 
         .cabinet-scene-bg {
             position: absolute;
             inset: 0;
-            background: url('assets/puzzl3bg.png') center / cover no-repeat;
+            background: url('assets/finalpuzzle3bg.png') center / cover no-repeat;
             transition: filter var(--transition-fast) ease;
         }
 
         /* Each cabinet drawer is pre-rendered on the same 1920x1080 canvas as
-   puzzl3bg.png, so it can be layered on top with a plain inset:0 cover. */
+   finalpuzzle3bg.png, so it can be layered on top with a plain inset:0 cover. */
         .cabinet-drawer-art {
             position: absolute;
             inset: 0;
@@ -1108,7 +1126,9 @@
         }
 
         .cabinet-scene-wrap.blurred .cabinet-scene-bg,
-        .cabinet-scene-wrap.blurred .cabinet-drawer-art {
+        .cabinet-scene-wrap.blurred .cabinet-drawer-art,
+        .cabinet-scene-wrap.blurred .cabinet-scene-title,
+        .cabinet-scene-wrap.blurred .cabinet-side-note {
             filter: blur(8px) brightness(0.6);
         }
 
@@ -1401,11 +1421,12 @@
     <div id="screen-cabinet" class="screen">
         <div class="room">
             <button class="back-btn" data-back>&larr; Back</button>
-            <h2>The File Cabinet</h2>
             <div id="cabinetStep2">
-                <p class="prompt">Cabinet unlocked. Click a drawer to open it and look through its files.</p>
                 <div class="cabinet-scene-wrap" id="cabinetSceneWrap">
                     <div class="cabinet-scene-bg" id="cabinetSceneBg"></div>
+                    <h2 class="cabinet-scene-title">The File Cabinet</h2>
+                    <p class="cabinet-side-note left">Cabinet unlocked. Click a drawer to open it.</p>
+                    <p class="cabinet-side-note right">Look through the files and choose the tampered one.</p>
                     <div class="cabinet-drawer-art" style="background-image:url('assets/topcabinet.PNG');"></div>
                     <div class="cabinet-drawer-art" style="background-image:url('assets/middlecabinet.PNG');"></div>
                     <div class="cabinet-drawer-art" style="background-image:url('assets/bottomcabinet.PNG');"></div>
