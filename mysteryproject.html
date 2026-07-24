@@ -89,7 +89,7 @@
         .scene-bg {
             position: absolute;
             inset: 0;
-            background: url('assets/scene-bg.png') center / cover no-repeat;
+            background: url('assets/scene-bg.PNG') center / cover no-repeat;
             transition: filter var(--transition-fast) ease;
         }
 
@@ -113,6 +113,7 @@
             cursor: pointer;
             padding: 0;
             transform: translate(-50%, -50%);
+            z-index: 20;
         }
 
         .hotspot img {
@@ -163,20 +164,21 @@
             inset: 0;
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             pointer-events: none;
-            z-index: 40;
+            z-index: 9999;
 
 
         }
 
         .scene-shadow {
             background-image: url('assets/scene-shadow.png');
-            opacity: 0.4;
+            opacity: 0.18;
         }
 
         .scene-light {
             background-image: url('assets/scene-light.png');
-            z-index: 41;
+            z-index: 11;
             opacity: 0.1;
         }
 
@@ -663,9 +665,22 @@
         /* ============================================================
    7. LOCK ROOM
    ============================================================ */
-        /* Static background art -- swap the file to change the room's look */
         #screen-lock {
-            background: url('assets/lockbg.png') center / cover no-repeat;
+            background: #f4dbea;
+            padding: 0;
+        }
+
+        /* Keep the puzzle art in its native 16:9 shape so it does not stretch
+           differently on wide, tall, or small screens. */
+        #screen-lock .room {
+            width: min(100vw, calc(100vh * 16 / 9));
+            height: min(100vh, calc(100vw * 9 / 16));
+            aspect-ratio: 16 / 9;
+            flex: 0 0 auto;
+            padding: 0;
+            overflow: hidden;
+            background: url('assets/Lockbg.png') center / contain no-repeat;
+            container-type: inline-size;
         }
 
         /* "The Lock" header -- pinned to the top of the room */
@@ -681,11 +696,11 @@
         }
 
         .flip-clock {
-            --flip-card-width: clamp(68px, 9vw, 92px);
-            --flip-card-height: clamp(76px, 10vw, 104px);
-            --flip-card-font: clamp(44px, 6vw, 66px);
+            --flip-card-width: clamp(46px, 5.2cqw, 66px);
+            --flip-card-height: clamp(50px, 6.1cqw, 70px);
+            --flip-card-font: clamp(30px, 3.5cqw, 44px);
             position: absolute;
-            top: 75%;
+            top: 44.5%;
             left: 50%;
             transform: translate(-50%, -50%);
             display: flex;
@@ -874,7 +889,7 @@
             background: rgba(255, 255, 255, 0.08);
             border: 2px dashed rgba(255, 255, 255, 0.4);
             padding: 14px 20px;
-            font-size: 14px;
+            font-size: clamp(8px, 1.1cqw, 14px);
             line-height: 1.8;
             letter-spacing: 2px;
         }
@@ -892,6 +907,7 @@
             background: #ffd7e8;
             color: #7a3b63;
             border-color: #7a3b63;
+            width: clamp(220px, 28cqw, 360px) !important;
         }
 
         #lockStep2 .field-row input[type="text"]::placeholder {
@@ -901,6 +917,57 @@
         #lockStep2 .field-row .btn {
             background: #ffd7e8;
             color: #7a3b63;
+        }
+
+        @media (max-width:700px), (max-height:520px) {
+            #screen-lock .room>h2 {
+                top: 6%;
+                font-size: clamp(9px, 3vw, 14px);
+            }
+
+            #lock-art {
+                display: none;
+            }
+
+            .flip-clock {
+                --flip-card-width: clamp(34px, 13vw, 50px);
+                --flip-card-height: clamp(36px, 14vw, 54px);
+                --flip-card-font: clamp(22px, 8vw, 32px);
+                top: 35%;
+                gap: 5px;
+            }
+
+            .flip-clock__slot {
+                margin-top: 3px;
+                font-size: 5px;
+            }
+
+            .cipher-box {
+                top: 60%;
+                width: 76%;
+                padding: 6px 8px;
+                font-size: clamp(5px, 1.8vw, 8px);
+                line-height: 1.45;
+                letter-spacing: 1px;
+            }
+
+            #lockStep2 .field-row {
+                top: 84%;
+                gap: 6px;
+            }
+
+            #lockStep2 .field-row input[type="text"] {
+                width: clamp(170px, 55vw, 220px) !important;
+                height: 34px;
+                font-size: 11px;
+                padding: 7px 9px;
+            }
+
+            #lockStep2 .field-row .btn {
+                height: 34px;
+                padding: 7px 10px;
+                font-size: 9px;
+            }
         }
 
         .lock-complete-panel {
@@ -939,8 +1006,8 @@
             top: 22%;
             left: 50%;
             transform: translate(-50%, 0);
-            width: 120px;
-            height: 120px;
+            width: clamp(62px, 9vw, 120px);
+            height: clamp(62px, 9vw, 120px);
             z-index: 2;
         }
 
@@ -1058,6 +1125,10 @@
             height: 100%;
             object-fit: contain;
             image-rendering: pixelated;
+        }
+
+        .cabinet-result-art img.is-missing {
+            display: none;
         }
 
         .cabinet-result-text {
@@ -1290,7 +1361,8 @@
                             <h2>File Found</h2>
                             <div class="cabinet-result-art" id="cabinetResultArt">
                                 <img src="assets/jollyiness.png" alt="Treasure Clue Art"
-                                    style="max-width: 100%; height: auto; display: block; margin: 0 auto;">
+                                    onerror="this.classList.add('is-missing'); this.nextElementSibling.style.display='block';">
+                                <span style="display:none;">Image goes here</span>
                             </div>
                             <p>thats the one ! inside is a code: <strong>KRISHNA</strong> — use it on the treasure
                                 chest !!</p>
