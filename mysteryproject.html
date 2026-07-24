@@ -171,13 +171,13 @@
 
         .scene-shadow {
             background-image: url('assets/scene-shadow.png');
-            opacity: 0.2;
+            opacity: 0.4;
         }
 
         .scene-light {
             background-image: url('assets/scene-light.png');
             z-index: 41;
-            opacity: 0.2;
+            opacity: 0.1;
         }
 
         /* ============================================================
@@ -1386,7 +1386,9 @@
                         // Banner-only scaling and position shifts
                         clone.style.width = '400px';
                         clone.style.height = 'auto';
-                        clone.style.transform = 'translate(-10px, -20px)'; // Moves up & left
+                        clone.style.transform = 'translate(-70px, -50px)'; // Moves up & left
+                        clone.style.rotate = '-5deg';
+                        clone.style.opacity = '0.85';
                         clone.style.cursor = 'pointer';
 
                         return clone.outerHTML;
@@ -1404,6 +1406,7 @@
                         clone.style.width = '400px';
                         clone.style.height = 'auto';
                         clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.opacity = '0.85';
                         clone.style.cursor = 'pointer';
 
                         return clone.outerHTML;
@@ -1421,9 +1424,9 @@
                         clone.src = 'assets/newfileicon.png';
 
                         // Banner-only scaling and position shifts
-                        clone.style.width = '400px';
+                        clone.style.width = '350px';
                         clone.style.height = 'auto';
-                        clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.transform = 'translate(0px, 70px)'; // Adjust coordinates if needed
                         clone.style.cursor = 'pointer';
 
                         return clone.outerHTML;
@@ -1438,9 +1441,10 @@
                         const clone = original.cloneNode(true);
 
                         // Banner-only scaling and position shifts
-                        clone.style.width = '400px';
+                        clone.style.width = '500px';
                         clone.style.height = 'auto';
-                        clone.style.transform = 'translate(0px, 0px)'; // Adjust coordinates if needed
+                        clone.style.transform = 'translate(-60px, -90px)'; // Adjust coordinates if needed
+                        clone.style.opacity = "0.85"
                         clone.style.cursor = 'pointer';
 
                         return clone.outerHTML;
